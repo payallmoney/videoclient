@@ -14,3 +14,14 @@ func HttpUrl(url string) string {
 	return ret;
 }
 
+func KodiUrl(url string) string {
+	cfg := Cfg()
+	server := fmt.Sprint(cfg["kodi"])
+	var ret string
+	if (url[0:1] == "/") {
+		ret = "http://" + server + url;
+	}else {
+		ret = "http://" + server + "/" + url;
+	}
+	return ret;
+}
