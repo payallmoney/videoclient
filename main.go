@@ -23,10 +23,9 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
 	m := martini.Classic()
 	m.Use(render.Renderer())
-	m.Get("/test", test)
 	m.Get("/reg", reg)
 	m.Get("/active", active)
-	m.Get("/getvideolist", getvideolist)
+	m.Get("/check", check)
 	m.Get("/qr", cpuqr)
 	m.Run()
 }
@@ -51,7 +50,7 @@ func active() string {
 	return string(body);
 }
 
-func getvideolist(r render.Render) {
+func check(r render.Render) {
 	resp, err := http.Get(HttpUrl("/video/list/" + cpuid()))
 	if err != nil {
 		log.Fatal(err)
@@ -67,10 +66,12 @@ func getvideolist(r render.Render) {
 	}
 	//反过来调用播放接口
 	var res interface{}
+	res ="true"
+
+	//clearPlayList(1)
 	//TODO  1,比较当前列表与列表的差异
 	if(isSamelist(files)){
-		log.Println("########same#########")
-		//
+		//相同的条件下不做任何事情
 	}else{
 		log.Println("**********not same*************")
 		//2,有差异则替换
@@ -78,13 +79,26 @@ func getvideolist(r render.Render) {
 			path := lists.Index(i).Elem().String()
 			donwfile(path)
 		}
-		res = playvideos(files)
+		playvideos(files,false)
 	}
 	r.JSON(200, res)
 }
 func isSamelist(newlist []string) bool{
-
-	return false
+	list := getlist().(map[string]interface{})["result"].(map[string]interface{})["items"].([]interface{})
+	log.Println(js(list))
+	if(len(newlist) !=len(list)){
+		return false;
+	}else{
+		for i:=0;i<len(list);i++{
+			newlabel := filepath.Base(newlist[i])
+			label := list[i].(map[string]interface{})["label"].(string)
+			log.Printf("\r\n===new==%v====\r\n===old==%v====\r\n",newlabel,label)
+			if newlabel != label{
+				return false;
+			}
+		}
+		return true;
+	}
 }
 
 func getPlayer(id int) {
@@ -92,65 +106,73 @@ func getPlayer(id int) {
 	jsonrpc(params, false)
 }
 
-func playvideos(videolist []string) interface{} {
-	playlistid := 1
+func playvideos(videolist []string,flag bool) interface{} {
 	//清除播放列表
-	//clearPlayList(playlistid)
-	//TODO 删除非当前播放的列表
-	clearOtherList(playlistid)
-	//TODO 增加记录
-	//先调用第一条播放记录进行播放
+	clearPlayList()
+	//增加列表
 	for i := 0; i < len(videolist); i++ {
-		additem(videolist[i], playlistid)
+		additem(videolist[i])
 	}
-	//TODO 判断是否播放
+	//未开始强制播放的情况下进行平滑播放,播放完当前视频才切换新视频列表
+	if(flag){
+		//强制开始播放
+		play()
+	}else if(!activePlayer()){
+		//如果未开始播放,则进行播放
+		play()
+	}
+	return getlist()
+}
 
-	//TODO
-	play(playlistid)
-	//activePlayer()
-	return getlist(playlistid)
-}
-func clearOtherList(id int){
-	currlist :=getlist(id)
-	log.Printf("%v",currlist)
-}
-func clearPlayList(id int) interface{} {
-	params := bson.M{"jsonrpc": "2.0", "method": "Playlist.Clear", "params": bson.M{"playlistid": id}, "id": 1}
+func clearPlayList()  interface{} {
+	params := bson.M{"jsonrpc": "2.0", "method": "Playlist.Clear", "params": bson.M{"playlistid": 1}, "id": 1}
 	return jsonrpc(params, false)
 }
-func activePlayer() interface{} {
+
+
+func getPlayeditem() string{
+	params := bson.M{"jsonrpc": "2.0", "method": "Player.GetItem", "params": bson.M{"playerid": 1}, "id": 1}
+	ret := jsonrpc(params, false);
+	result ,_ := ret.( map[string]interface{})["result"].( map[string]interface{})["item"].( map[string]interface{})["label"].(string)
+	return result
+}
+func activePlayer() bool{
 	params := bson.M{"jsonrpc": "2.0", "method": "Player.GetActivePlayers", "id": 1}
-	return jsonrpc(params, false)
+	ret :=jsonrpc(params, false).(map[string]interface{})["result"].([]interface{});
+	if(len(ret)>0){
+		return true
+	}else{
+		return false
+	}
 }
-func playPause(id int) interface{} {
+func playPause() interface{} {
 	params := bson.M{"jsonrpc": "2.0", "method": "Player.PlayPause", "id": 1, "params":  bson.M{
-		"playerid": id }}
+		"playerid": 1 }}
 	return jsonrpc(params, false)
 }
-func play(id int) interface{} {
+func play()  interface{} {
 	params := bson.M{"jsonrpc": "2.0", "method": "Player.Open", "id": 1, "params":  bson.M{
-		"item":bson.M{"playlistid":id} }}
+		"item":bson.M{"playlistid":1},
+		"options":bson.M{"repeat":"all"}}}
 	return jsonrpc(params, false)
 }
-func playVideo(video string) interface{} {
+func playVideo(video string)  interface{} {
 	video = strings.Replace(video, "\\", "/", -1)
 	params := bson.M{"jsonrpc": "2.0", "method": "Player.Open", "id": 1, "params":  bson.M{
 		"item":bson.M{"file":video} }}
 	return jsonrpc(params, false)
 }
-func additem(file string, id int) interface{} {
+func additem(file string) interface{} {
 	params := bson.M{
 		"jsonrpc": "2.0",
 		"method": "Playlist.Add",
 		"id": 1,
 		"params": bson.M{
-			"playlistid": id,
+			"playlistid": 1,
 			"item":bson.M{"file":file}}}
 	return jsonrpc(params, false)
 }
-//func jsonrpc (param interface{} ) interface{} {
-//	return kodirpc(param,false)
-//}
+
 func jsonrpc(param interface{}, flag bool) interface{} {
 	params_str, err := json.Marshal(param)
 	if (flag) {
@@ -172,79 +194,24 @@ func jsonrpc(param interface{}, flag bool) interface{} {
 	return result
 }
 
-func getlist(id int) interface{} {
+func getlist() interface{} {
 	params := bson.M{
 		"jsonrpc": "2.0",
 		"method": "Playlist.GetItems",
 		"params": bson.M{"properties": []string{"runtime", "showtitle", "season", "title", "artist" },
-			"playlistid": id},
+			"playlistid": 1},
 		"id": 1}
 
 	return jsonrpc(params, false)
 }
-func print(item interface{}) {
+func js(item interface{}) string {
 	params_str, err := json.Marshal(item)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(string(params_str))
+	return (string(params_str))
 }
-func test() string {
-	//client, err := jsonrpc.Dial("http", "localhost:8080/")
-	var params bson.M
-	//params = bson.M{
-	//	"jsonrpc": "2.0", "method": "JSONRPC.Introspect", "params": bson.M{ "filter":  bson.M{ "id": "Player.GetActivePlayers", "type": "method" } },
-	//	"id": 1 }
-	//jsonrpc(params)
-	//params =bson.M{
-	//	"jsonrpc": "2.0",
-	//	"method": "Player.GetActivePlayers",
-	//	"id": 1}
-	//jsonrpc(params)
-	//
-	//params =bson.M{
-	//	"jsonrpc": "2.0",
-	//	"method": "Playlist.GetItems",
-	//	"params": bson.M{ "properties": []string{ "runtime", "showtitle", "season", "title", "artist" },
-	//		"playlistid": 1},
-	//	"id": 1}
-	//
-	//jsonrpc(params)
-	//params =bson.M{
-	//	"jsonrpc": "2.0",
-	//	"method": "Playlist.Add",
-	//	"params": bson.M{
-	//		"item":bson.M{"file":"D:\\videowork\\videoclient/video/d4db2188-1f73-4a72-9ddc-f5868ba72714.mp4"},
-	//		"playlistid": 1},
-	//	"id": 1}
-	//jsonrpc(params)
-	//
-	//params =bson.M{
-	//	"jsonrpc": "2.0",
-	//	"method": "Playlist.GetItems",
-	//	"params": bson.M{ "properties": []string{ "runtime", "showtitle", "season", "title", "artist" },
-	//		"playlistid": 1},
-	//	"id": 1}
-	//
-	//jsonrpc(params)
-	params = bson.M{"jsonrpc": "2.0", "method": "Player.Open", "params":  bson.M{
-		"item":bson.M{"file":"D:\\videowork\\videoclient/video/d4db2188-1f73-4a72-9ddc-f5868ba72714.mp4"}}, "id": 1}
-	jsonrpc(params, false)
-	//
-	//params =bson.M{
-	//	"jsonrpc": "2.0",
-	//	"method": "Playlist.GetItems",
-	//	"params": bson.M{ "properties": []string{ "runtime", "showtitle", "season", "title", "artist" },
-	//		"playlistid": 1},
-	//	"id": 1}
-	//
-	//jsonrpc(params)
-	//params =bson.M{"jsonrpc": "2.0", "method": "Player.PlayPause", "params": bson.M{ "playerid": 1 }, "id": 1}
-	//jsonrpc(params)
-	//params =bson.M{"jsonrpc": "2.0", "method": "Playlist.Clear","params": bson.M{"playlistid": 1}, "id": 1}
-	//jsonrpc(params)
-	return "调用成功"
-}
+
 func filename(path string) string {
 	idx := strings.LastIndex(path, "/")
 	rootpath, err := filepath.Abs(filepath.Dir(os.Args[0]))
@@ -260,9 +227,11 @@ func filename(path string) string {
 }
 func donwfile(path string) string {
 	realpath := filename(path)
-	log.Println(realpath)
+	//检查文件是否存在,如果已存在则不再下载
+	if fileexists(realpath){
+		return realpath
+	}
 	downloadurl := HttpUrl(path)
-	log.Println(downloadurl)
 
 	out, err := os.Create(realpath)
 	if err != nil {
@@ -278,6 +247,13 @@ func donwfile(path string) string {
 	return realpath
 }
 
+func fileexists(file string) bool{
+	if _, err := os.Stat(file); os.IsNotExist(err) {
+		return false;
+	}else{
+		return true;
+	}
+}
 func cpuid() string {
 	cpuid := ""
 	if runtime.GOOS == "windows" {
