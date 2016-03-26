@@ -19,7 +19,6 @@ func main() {
 
 	log.SetFlags(log.LstdFlags | log.Llongfile)
 
-	log_print("123")
 	m := martini.Classic()
 	m.Use(render.Renderer())
 	m.Get("/reg", reg)

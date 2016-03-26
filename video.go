@@ -34,6 +34,11 @@ func videocheck() {
 	var result  interface{}
 	json.Unmarshal(body, &result)
 	lists := reflect.ValueOf(result)
+	if(lists.IsNil()){
+		checking = false
+		//设备尚未注册
+		return
+	}
 	files := make([]string, lists.Len())
 	for i := 0; i < lists.Len(); i++ {
 		path := lists.Index(i).Elem().String()
@@ -55,6 +60,10 @@ func videocheck() {
 }
 
 func isSamelist(newlist []string) bool {
+	items:=getlist().(map[string]interface{})["result"].(map[string]interface{})["items"]
+	if(items == nil){
+		return false
+	}
 	list := getlist().(map[string]interface{})["result"].(map[string]interface{})["items"].([]interface{})
 	if (len(newlist) != len(list)) {
 		return false;
@@ -166,7 +175,7 @@ func getlist() interface{} {
 			"playlistid": 1},
 		"id": 1}
 
-	return jsonrpc(params, false)
+	return jsonrpc(params, true)
 }
 
 
