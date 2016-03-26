@@ -1,12 +1,9 @@
 package main
 
 import (
-	"os"
 "runtime"
 "os/exec"
 "strings"
-"path/filepath"
-	"github.com/skip2/go-qrcode"
 )
 
 func cpuid() string {

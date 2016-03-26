@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"io/ioutil"
 	"github.com/martini-contrib/render"
+	"github.com/skip2/go-qrcode"
 )
 
 var checking = false
