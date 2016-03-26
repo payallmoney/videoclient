@@ -25,11 +25,5 @@ func cpuid() string {
 	return cpuid
 }
 
-func cpuqr() string {
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	picpath := dir + "/cpuqr.png"
-	err := qrcode.WriteFile("raspi:" + cpuid(), qrcode.Highest, 256, picpath)
-	checkerr(err)
-	return picpath
-}
+
 
