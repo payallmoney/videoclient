@@ -17,6 +17,7 @@ import (
 	"github.com/martini-contrib/render"
 	"gopkg.in/mgo.v2/bson"
 	"bytes"
+	"time"
 )
 
 func main() {
@@ -49,8 +50,18 @@ func active() string {
 	body, _ := ioutil.ReadAll(resp.Body)
 	return string(body);
 }
+func circle(){
+	checktime := Cfg()["checktime"].(time.Duration)
+	ticker := time.NewTicker(checktime)
+	go func() {
+		for  range ticker.C {
+			videocheck()
+		}
+	}()
+}
 
-func check(r render.Render) {
+func videocheck() {
+	log.Println("====videocheck===")
 	resp, err := http.Get(HttpUrl("/video/list/" + cpuid()))
 	if err != nil {
 		log.Fatal(err)
@@ -65,11 +76,6 @@ func check(r render.Render) {
 		files[i] = filename(path)
 	}
 	//反过来调用播放接口
-	var res interface{}
-	res ="true"
-
-	//clearPlayList(1)
-	//TODO  1,比较当前列表与列表的差异
 	if(isSamelist(files)){
 		//相同的条件下不做任何事情
 	}else{
@@ -81,18 +87,25 @@ func check(r render.Render) {
 		}
 		playvideos(files,false)
 	}
+}
+
+func check(r render.Render) {
+	videocheck()
+	circle()
+	//反过来调用播放接口
+	var res interface{}
+	res ="true"
+
 	r.JSON(200, res)
 }
 func isSamelist(newlist []string) bool{
 	list := getlist().(map[string]interface{})["result"].(map[string]interface{})["items"].([]interface{})
-	log.Println(js(list))
 	if(len(newlist) !=len(list)){
 		return false;
 	}else{
 		for i:=0;i<len(list);i++{
 			newlabel := filepath.Base(newlist[i])
 			label := list[i].(map[string]interface{})["label"].(string)
-			log.Printf("\r\n===new==%v====\r\n===old==%v====\r\n",newlabel,label)
 			if newlabel != label{
 				return false;
 			}
