@@ -20,8 +20,15 @@ import (
 	"time"
 )
 
+var checking = false
+var rootpath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+
 func main() {
+	//设置日志
+
 	log.SetFlags(log.LstdFlags | log.Llongfile)
+
+	log_print("123")
 	m := martini.Classic()
 	m.Use(render.Renderer())
 	m.Get("/reg", reg)
@@ -32,21 +39,15 @@ func main() {
 }
 
 func reg() string {
-	log.Println(HttpUrl("/video/reg/" + cpuid()));
 	resp, err := http.Get(HttpUrl("/video/reg/" + cpuid()))
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkerr(err)
 	body, _ := ioutil.ReadAll(resp.Body)
-	log.Println(body)
 	return string(body);
 }
 
 func active() string {
 	resp, err := http.Get(HttpUrl("/video/active/" + cpuid()))
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkerr(err)
 	body, _ := ioutil.ReadAll(resp.Body)
 	return string(body);
 }
@@ -61,11 +62,13 @@ func circle(){
 }
 
 func videocheck() {
-	log.Println("====videocheck===")
-	resp, err := http.Get(HttpUrl("/video/list/" + cpuid()))
-	if err != nil {
-		log.Fatal(err)
+	if checking {
+		return
 	}
+	checking = true
+
+	resp, err := http.Get(HttpUrl("/video/list/" + cpuid()))
+	checkerr(err)
 	body, _ := ioutil.ReadAll(resp.Body)
 	var result  interface{}
 	json.Unmarshal(body, &result)
@@ -87,6 +90,8 @@ func videocheck() {
 		}
 		playvideos(files,false)
 	}
+
+	checking = false;
 }
 
 func check(r render.Render) {
@@ -188,16 +193,12 @@ func additem(file string) interface{} {
 
 func jsonrpc(param interface{}, flag bool) interface{} {
 	params_str, err := json.Marshal(param)
+	checkerr(err)
 	if (flag) {
 		log.Println(string(params_str))
 	}
-	if err != nil {
-		log.Fatal(err)
-	}
 	resp, err := http.Post(KodiUrl("/jsonrpc"), "application/json", bytes.NewBuffer([]byte(params_str)))
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkerr(err)
 	body, _ := ioutil.ReadAll(resp.Body)
 	if (flag) {
 		log.Printf("=====ret====%s\r\n", body)
@@ -219,23 +220,17 @@ func getlist() interface{} {
 }
 func js(item interface{}) string {
 	params_str, err := json.Marshal(item)
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkerr(err)
 	return (string(params_str))
 }
 
 func filename(path string) string {
 	idx := strings.LastIndex(path, "/")
 	rootpath, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkerr(err)
 	ret := rootpath + "/video" + path[idx:];
 	ret, err = filepath.Abs(ret);
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkerr(err)
 	return ret
 }
 func donwfile(path string) string {
@@ -247,14 +242,10 @@ func donwfile(path string) string {
 	downloadurl := HttpUrl(path)
 
 	out, err := os.Create(realpath)
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkerr(err)
 	defer out.Close()
 	resp, err := http.Get(downloadurl)
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkerr(err)
 	defer resp.Body.Close()
 	io.Copy(out, resp.Body)
 	return realpath
@@ -272,9 +263,7 @@ func cpuid() string {
 	if runtime.GOOS == "windows" {
 		// "wmic cpu get ProcessorId /format:csv"
 		strs, err := exec.Command("wmic", "cpu", "get", "ProcessorId", "/format:csv").Output()
-		if err != nil {
-			log.Fatal(err)
-		}
+		checkerr(err)
 		id := strings.Split(strings.Split(string(strs), "\r\n")[2], ",")[1];
 		cpuid = strings.TrimSpace(id)
 	}else {
@@ -289,9 +278,6 @@ func cpuqr() string {
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	picpath := dir + "/cpuqr.png"
 	err := qrcode.WriteFile("raspi:" + cpuid(), qrcode.Highest, 256, picpath)
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkerr(err)
 	return picpath
 }
-
