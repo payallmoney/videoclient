@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+"encoding/json"
 )
 
 func HttpUrl(url string) string {
@@ -69,4 +70,11 @@ func log_printf(format string, msg string) {
 	log.Printf(format + "\r\n", msg)
 	logfile.Close();
 	log.SetOutput(nil)
+}
+
+
+func js(item interface{}) string {
+	params_str, err := json.Marshal(item)
+	checkerr(err)
+	return (string(params_str))
 }
