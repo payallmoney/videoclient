@@ -28,8 +28,6 @@ func main() {
 	m.Get("/reg", reg)
 	m.Get("/active", active)
 	m.Get("/getvideolist", getvideolist)
-	m.Get("/downloadvideolist", downloadvideolist)
-	m.Get("/playvideo", playvideo)
 	m.Get("/qr", cpuqr)
 	m.Run()
 }
@@ -68,18 +66,83 @@ func getvideolist(r render.Render) {
 	fmt.Println(reflect.TypeOf(lists.Index(0).Elem().String()));
 	fmt.Println(lists.Index(0).Elem());
 	ret := make([]string, lists.Len())
+	//items := make([]bson.M, lists.Len())
 	for i := 0; i < lists.Len(); i++ {
 		path := lists.Index(i).Elem().String()
 		realpath := donwfile(path)
 		ret[i] = realpath
+		//items[i] = bson.M{"file":ret[0]}
 	}
+	print(ret);
 	//反过来调用播放接口
 
-	r.JSON(200, ret)
+	res := playvideos(ret)
+
+	r.JSON(200, res)
 }
-func jsonrpc (param interface{}) {
+
+func getPlayer(id int){
+	params :=bson.M{"jsonrpc": "2.0", "method": "Playlist.Clear","params": bson.M{"playlistid": id}, "id": 1}
+	jsonrpc(params)
+}
+
+func playvideos(videolist []string) interface{}{
+	//清除播放列表
+	getlist()
+	activePlayer()
+
+	playlistid := 1
+	clearPlayList(playlistid)
+	getlist()
+	//先调用第一条播放记录进行播放
+
+	//playVideo(videolist[0])
+	//play(playlistid)
+	for i := 0; i < len(videolist); i++ {
+		additem(videolist[i],playlistid)
+	}
+
+	activePlayer()
+	return  getlist()
+}
+func clearPlayList(id int) interface{}{
+	params :=bson.M{"jsonrpc": "2.0", "method": "Playlist.Clear","params": bson.M{"playlistid": id}, "id": 1}
+	return jsonrpc(params)
+}
+func activePlayer()interface{}{
+	params :=bson.M{"jsonrpc": "2.0", "method": "Player.GetActivePlayers", "id": 1}
+	return jsonrpc(params)
+}
+func playPause(id int)interface{}{
+	params :=bson.M{"jsonrpc": "2.0", "method": "Player.PlayPause", "id": 1, "params":  bson.M{
+			"playerid": id }}
+	return jsonrpc(params)
+}
+func play(id int)interface{}{
+	params :=bson.M{"jsonrpc": "2.0", "method": "Player.Open", "id": 1, "params":  bson.M{
+		"item":bson.M{"playlistid":id} }}
+	return jsonrpc(params)
+}
+func playVideo(video string)interface{}{
+	video = strings.Replace(video,"\\","/",-1)
+	params :=bson.M{"jsonrpc": "2.0", "method": "Player.Open", "id": 1, "params":  bson.M{
+		"item":bson.M{"file":video} }}
+	return jsonrpc(params)
+}
+func additem(file string,id int )interface{}{
+	file = strings.Replace(file,"\\","/",-1)
+	params :=bson.M{
+		"jsonrpc": "2.0",
+		"method": "Playlist.Add",
+		"id": 1,
+		"params": bson.M{
+			"playlistid": id,
+			"item":bson.M{"file":file}}}
+	return jsonrpc(params)
+}
+func jsonrpc (param interface{}) interface{} {
 	params_str,err := json.Marshal(param)
-	fmt.Println(params_str)
+	fmt.Println(string(params_str))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -88,10 +151,12 @@ func jsonrpc (param interface{}) {
 		log.Fatal(err)
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(body));
+	var result  interface{}
+	json.Unmarshal(body, &result)
+	fmt.Printf("=====ret====%s\r\n",body)
+	return result
 }
-func test() string {
-	//client, err := jsonrpc.Dial("http", "localhost:8080/")
+func getlist() interface{}{
 	params :=bson.M{
 		"jsonrpc": "2.0",
 		"method": "Playlist.GetItems",
@@ -99,19 +164,68 @@ func test() string {
 			"playlistid": 1},
 		"id": 1}
 
-	params =bson.M{
-		"jsonrpc": "2.0",
-		"method": "Playlist.GetActivePlayers",
-		"id": 1}
-	jsonrpc(params)
+	return jsonrpc(params)
+}
+func print(item interface{}){
+	params_str,err := json.Marshal(item)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(params_str))
+}
+func test() string {
+	//client, err := jsonrpc.Dial("http", "localhost:8080/")
+	var params bson.M
+	//params = bson.M{
+	//	"jsonrpc": "2.0", "method": "JSONRPC.Introspect", "params": bson.M{ "filter":  bson.M{ "id": "Player.GetActivePlayers", "type": "method" } },
+	//	"id": 1 }
+	//jsonrpc(params)
+	//params =bson.M{
+	//	"jsonrpc": "2.0",
+	//	"method": "Player.GetActivePlayers",
+	//	"id": 1}
+	//jsonrpc(params)
+	//
+	//params =bson.M{
+	//	"jsonrpc": "2.0",
+	//	"method": "Playlist.GetItems",
+	//	"params": bson.M{ "properties": []string{ "runtime", "showtitle", "season", "title", "artist" },
+	//		"playlistid": 1},
+	//	"id": 1}
+	//
+	//jsonrpc(params)
 	//params =bson.M{
 	//	"jsonrpc": "2.0",
 	//	"method": "Playlist.Add",
-	//	"params": bson.M{ "item":"D:\\videowork\\videoclient/video/d4db2188-1f73-4a72-9ddc-f5868ba72714.mp4",
+	//	"params": bson.M{
+	//		"item":bson.M{"file":"D:\\videowork\\videoclient/video/d4db2188-1f73-4a72-9ddc-f5868ba72714.mp4"},
 	//		"playlistid": 1},
 	//	"id": 1}
 	//jsonrpc(params)
-	//params =bson.M{"jsonrpc": "2.0", "method": "Player.PlayPause", "params": bson.M{ "playerid": 0 }, "id": 1}
+	//
+	//params =bson.M{
+	//	"jsonrpc": "2.0",
+	//	"method": "Playlist.GetItems",
+	//	"params": bson.M{ "properties": []string{ "runtime", "showtitle", "season", "title", "artist" },
+	//		"playlistid": 1},
+	//	"id": 1}
+	//
+	//jsonrpc(params)
+	params =bson.M{"jsonrpc": "2.0", "method": "Player.Open", "params":  bson.M{
+		"item":bson.M{"file":"D:\\videowork\\videoclient/video/d4db2188-1f73-4a72-9ddc-f5868ba72714.mp4"}}, "id": 1}
+	jsonrpc(params)
+	//
+	//params =bson.M{
+	//	"jsonrpc": "2.0",
+	//	"method": "Playlist.GetItems",
+	//	"params": bson.M{ "properties": []string{ "runtime", "showtitle", "season", "title", "artist" },
+	//		"playlistid": 1},
+	//	"id": 1}
+	//
+	//jsonrpc(params)
+	//params =bson.M{"jsonrpc": "2.0", "method": "Player.PlayPause", "params": bson.M{ "playerid": 1 }, "id": 1}
+	//jsonrpc(params)
+	//params =bson.M{"jsonrpc": "2.0", "method": "Playlist.Clear","params": bson.M{"playlistid": 1}, "id": 1}
 	//jsonrpc(params)
 	return "调用成功"
 }
@@ -121,7 +235,7 @@ func filename(path string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return rootpath + "/video/" + path[idx:]
+	return rootpath + "/video" + path[idx:]
 }
 func donwfile(path string) string {
 	realpath := filename(path)
@@ -141,24 +255,6 @@ func donwfile(path string) string {
 	defer resp.Body.Close()
 	io.Copy(out, resp.Body)
 	return realpath
-}
-func downloadvideolist() string {
-	resp, err := http.Get(HttpUrl("/video/list/" + cpuid()))
-	if err != nil {
-		log.Fatal(err)
-	}
-	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(body));
-	return string(body);
-}
-func playvideo() string {
-	resp, err := http.Get(HttpUrl("/video/list/" + cpuid()))
-	if err != nil {
-		log.Fatal(err)
-	}
-	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(body));
-	return string(body);
 }
 
 func cpuid() string {
