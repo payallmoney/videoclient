@@ -16,7 +16,7 @@ func circle() {
 	checktime := Cfg()["checktime"].(time.Duration)
 	ticker := time.NewTicker(checktime)
 	go func() {
-		for _ ,_ = range ticker.C {
+		for _  = range ticker.C {
 			videocheck()
 		}
 	}()
