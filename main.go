@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"github.com/martini-contrib/render"
 	"github.com/skip2/go-qrcode"
+	"encoding/json"
 )
 
 var checking = false
@@ -24,6 +25,7 @@ func main() {
 	m.Get("/reg", reg)
 	m.Get("/active", active)
 	m.Get("/check", check)
+	m.Get("/status", status)
 	m.Get("/qr", cpuqr)
 	m.Run()
 	//m.RunOnAddr(":10001")
@@ -60,6 +62,19 @@ func cpuqr() string {
 	checkerr(err)
 	return picpath
 }
+
+
+
+func status(r render.Render){
+	log.Println(cpuid())
+	resp, err := http.Get(HttpUrl("/video/status/" + cpuid()))
+	checkerr(err)
+	body, _ := ioutil.ReadAll(resp.Body)
+	var result  interface{}
+	json.Unmarshal(body, &result)
+	r.JSON(200, result)
+}
+
 
 
 

@@ -97,5 +97,3 @@ func playvideos(videolist []string, flag bool) interface{} {
 	return getlist()
 }
 
-
-
