@@ -5,6 +5,9 @@ import (
 	"log"
 	"os"
 "encoding/json"
+	"path/filepath"
+	"io"
+	"runtime/debug"
 )
 
 func HttpUrl(url string) string {
@@ -38,17 +41,22 @@ func KodiUrl(url string) string {
 }
 
 func checkerr(err error) {
+	var rootpath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		var logfile, logfileerr = os.OpenFile(rootpath + "/client.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 		if logfileerr != nil {
 			log.Fatalf("error opening file: %v", logfileerr)
 		}
-		log.SetOutput(logfile)
-		log.Fatal(err)
+		mWriter := io.MultiWriter(os.Stdout, logfile)
+		log.SetOutput(mWriter)
+
+		log.Println(err)
+		log.Println(string(debug.Stack()))
 		logfile.Close();
-		log.SetOutput(nil)
+		log.SetOutput(os.Stdout)
 	}
 }
+
 
 func log_print(msg string) {
 	var logfile, logfileerr = os.OpenFile(rootpath + "/client.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
