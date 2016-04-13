@@ -27,8 +27,8 @@ func main() {
 	m.Get("/check", check)
 	m.Get("/status", status)
 	m.Get("/qr", cpuqr)
-	m.Run()
-	//m.RunOnAddr(":10001")
+	//m.Run()
+	m.RunOnAddr(":10001")
 }
 
 func reg() string {
