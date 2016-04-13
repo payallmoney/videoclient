@@ -15,8 +15,8 @@ func cpuid() string {
 		id := strings.Split(strings.Split(string(strs), "\r\n")[2], ",")[1];
 		cpuid = strings.TrimSpace(id)
 	}else {
-		// "cat /proc/cpuinfo | grep Serial | cut -d ':' -f 2'"
-		strs, _ := exec.Command("cat", "/proc/cpuinfo", "|", "grep", "Serial", "|", "cut", "-d", "':'", "-f", "2").Output();
+		// "cat /proc/cpuinfo | grep Serial | cut -d ':' -f 2"
+		strs,_ :=exec.Command("bash","-c","cat /proc/cpuinfo | grep Serial | cut -d ':' -f 2").Output()
 		cpuid = strings.TrimSpace(string(strs))
 	}
 	return cpuid
