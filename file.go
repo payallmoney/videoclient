@@ -18,7 +18,7 @@ func filename(path string) string {
 	checkerr(err)
 	return ret
 }
-func donwfile(path string) string {
+func downfile(path string) string {
 	realpath := filename(path)
 	//检查文件是否存在,如果已存在则不再下载
 	if fileexists(realpath){

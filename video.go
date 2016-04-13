@@ -49,7 +49,7 @@ func videocheck() {
 		//2,有差异则替换
 		for i := 0; i < lists.Len(); i++ {
 			path := lists.Index(i).Elem().String()
-			donwfile(path)
+			downfile(path)
 		}
 		playvideos(files, false)
 	}

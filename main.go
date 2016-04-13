@@ -32,14 +32,14 @@ func main() {
 }
 
 func reg() string {
-	resp, err := http.Get(HttpUrl("/video/reg/" + cpuid()))
+	resp, err := http.Get(HttpUrl("/client/reg/" + cpuid()))
 	checkerr(err)
 	body, _ := ioutil.ReadAll(resp.Body)
 	return string(body);
 }
 
 func active() string {
-	resp, err := http.Get(HttpUrl("/video/active/" + cpuid()))
+	resp, err := http.Get(HttpUrl("/client/active/" + cpuid()))
 	checkerr(err)
 	body, _ := ioutil.ReadAll(resp.Body)
 	return string(body);
@@ -66,8 +66,7 @@ func cpuqr() string {
 
 
 func status(r render.Render){
-	log.Println(cpuid())
-	resp, err := http.Get(HttpUrl("/video/status/" + cpuid()))
+	resp, err := http.Get(HttpUrl("/client/status/" + cpuid()))
 	checkerr(err)
 	body, _ := ioutil.ReadAll(resp.Body)
 	var result  interface{}
