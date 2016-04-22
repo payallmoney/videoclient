@@ -5,7 +5,6 @@ import (
 //"os/exec"
 //"strings"
 	"github.com/shirou/gopsutil/cpu"
-	"log"
 )
 
 /*
