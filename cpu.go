@@ -37,7 +37,3 @@ func cpuid()string{
 	ids,_ := cpu.Info()
 	return ids[0].PhysicalID
 }
-
-func main(){
-	log.Println(cpuid())
-}
