@@ -6,8 +6,9 @@ import (
 	"os"
 	"net/http"
 	"io"
+	"crypto/md5"
+	"fmt"
 )
-
 
 func filename(path string) string {
 	idx := strings.LastIndex(path, "/")
@@ -18,14 +19,19 @@ func filename(path string) string {
 	checkerr(err)
 	return ret
 }
-func downfile(path string) string {
+func downfile(path string,hash string) string {
 	realpath := filename(path)
 	//检查文件是否存在,如果已存在则不再下载
 	if fileexists(realpath){
-		return realpath
+		//检查hash
+		localhash ,_ := ComputeMd5(realpath)
+		if(localhash == hash){
+			return realpath
+		}else{
+			os.Remove(realpath);
+		}
 	}
 	downloadurl := HttpUrl(path)
-
 	out, err := os.Create(realpath)
 	checkerr(err)
 	defer out.Close()
@@ -42,4 +48,20 @@ func fileexists(file string) bool{
 	}else{
 		return true;
 	}
+}
+
+func ComputeMd5(filePath string) (string, error) {
+	var result []byte
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	hash := md5.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x",hash.Sum(result)), nil
 }

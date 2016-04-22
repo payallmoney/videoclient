@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 "encoding/json"
@@ -13,7 +12,7 @@ import (
 
 func HttpUrl(url string) string {
 	cfg := Cfg()
-	server := fmt.Sprint(cfg["server"])
+	server := cfg["server"].(string)
 	var ret string
 	if (server[len(server) - 1:] == "/") {
 		server = server[0:len(server) - 1]
@@ -28,7 +27,7 @@ func HttpUrl(url string) string {
 
 func KodiUrl(url string) string {
 	cfg := Cfg()
-	server := fmt.Sprint(cfg["kodi"])
+	server := cfg["kodi"].(string)
 	var ret string
 	if (server[len(server) - 1:] == "/") {
 		server = server[0:len(server) - 1]
@@ -64,10 +63,11 @@ func log_print(msg string) {
 	if logfileerr != nil {
 		log.Fatalf("error opening file: %v", logfileerr)
 	}
-	log.SetOutput(logfile)
+	mWriter := io.MultiWriter(os.Stdout, logfile)
+	log.SetOutput(mWriter)
 	log.Println(msg)
 	logfile.Close();
-	log.SetOutput(nil)
+	log.SetOutput(os.Stdout)
 }
 
 func log_printf(format string, msg string) {
@@ -75,10 +75,11 @@ func log_printf(format string, msg string) {
 	if logfileerr != nil {
 		log.Fatalf("error opening file: %v", logfileerr)
 	}
-	log.SetOutput(logfile)
+	mWriter := io.MultiWriter(os.Stdout, logfile)
+	log.SetOutput(mWriter)
 	log.Printf(format + "\r\n", msg)
 	logfile.Close();
-	log.SetOutput(nil)
+	log.SetOutput(os.Stdout)
 }
 
 

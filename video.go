@@ -20,39 +20,38 @@ func circle() {
 }
 
 func videocheck() {
+
 	if checking {
 		return
 	}
 	checking = true
+	id :=cpuid()
 
-	resp, err := http.Get(HttpUrl("/video/list/" + cpuid()))
+	resp, err := http.Get(HttpUrl("/video/list/" + id))
 	checkerr(err)
 	body, _ := ioutil.ReadAll(resp.Body)
 	var result  interface{}
 	json.Unmarshal(body, &result)
 	lists := reflect.ValueOf(result)
-
 	if(result == nil || lists.IsNil()){
 		checking = false
 		//设备尚未注册
 		return
 	}
 	files := make([]string, lists.Len())
+	hashs := make([]string, lists.Len())
 	for i := 0; i < lists.Len(); i++ {
-		path := lists.Index(i).Elem().String()
+		path := lists.Index(i).Elem().MapIndex(reflect.ValueOf("src")).Elem().String()
+		hash := lists.Index(i).Elem().MapIndex(reflect.ValueOf("hash")).Elem().String()
 		files[i] = filename(path)
+		hashs[i] = hash
 	}
-	//反过来调用播放接口
-	if (isSamelist(files)) {
-		//相同的条件下不做任何事情
-	}else {
-		//2,有差异则替换
-		for i := 0; i < lists.Len(); i++ {
-			path := lists.Index(i).Elem().String()
-			downfile(path)
-		}
-		playvideos(files, false)
+	//检查一遍视频
+	for i := 0; i < lists.Len(); i++ {
+		path := lists.Index(i).Elem().MapIndex(reflect.ValueOf("src")).Elem().String()
+		downfile(path,hashs[i])
 	}
+	playvideos(files, false)
 
 	checking = false;
 }
