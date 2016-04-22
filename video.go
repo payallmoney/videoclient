@@ -20,8 +20,10 @@ func circle() {
 }
 
 func videocheck() {
-
+	log_print(" do .. videocheck...")
 	if checking {
+		log_print(" do .. videocheck...return  ... checking  ")
+
 		return
 	}
 	checking = true
@@ -29,9 +31,11 @@ func videocheck() {
 
 	resp, err := http.Get(HttpUrl("/video/list/" + id))
 	checkerr(err)
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	checkerr(err)
 	var result  interface{}
-	json.Unmarshal(body, &result)
+	err =json.Unmarshal(body, &result)
+	checkerr(err)
 	lists := reflect.ValueOf(result)
 	if(result == nil || lists.IsNil()){
 		checking = false

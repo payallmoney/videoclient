@@ -24,11 +24,13 @@ func downfile(path string,hash string) string {
 	//检查文件是否存在,如果已存在则不再下载
 	if fileexists(realpath){
 		//检查hash
-		localhash ,_ := ComputeMd5(realpath)
+		localhash ,err := ComputeMd5(realpath)
+		checkerr(err)
 		if(localhash == hash){
 			return realpath
 		}else{
-			os.Remove(realpath);
+			err = os.Remove(realpath);
+			checkerr(err)
 		}
 	}
 	downloadurl := HttpUrl(path)
