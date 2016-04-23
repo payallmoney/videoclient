@@ -8,6 +8,8 @@ import (
 	"io"
 	"crypto/md5"
 	"fmt"
+	"time"
+"net"
 )
 
 func filename(path string) string {
@@ -37,11 +39,24 @@ func downfile(path string,hash string) string {
 	out, err := os.Create(realpath)
 	checkerr(err)
 	defer out.Close()
-	resp, err := http.Get(downloadurl)
+
+	transport := http.Transport{
+		Dial: dialTimeout,
+	}
+	client := http.Client{
+		Transport: &transport,
+	}
+
+	resp, err := client.Get(downloadurl)
 	checkerr(err)
 	defer resp.Body.Close()
 	io.Copy(out, resp.Body)
 	return realpath
+}
+
+func dialTimeout(network, addr string) (net.Conn, error) {
+	var timeout = time.Duration(2 * time.Hour)
+	return net.DialTimeout(network, addr, timeout)
 }
 
 func fileexists(file string) bool{
