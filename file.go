@@ -28,6 +28,8 @@ func downfile(path string,hash string) string {
 		//检查hash
 		localhash ,err := ComputeMd5(realpath)
 		checkerr(err)
+		log_print("localhash===="+localhash)
+		log_print("hash===="+hash)
 		if(localhash == hash){
 			return realpath
 		}else{
