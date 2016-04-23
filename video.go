@@ -55,7 +55,13 @@ func videocheck() {
 		path := lists.Index(i).Elem().MapIndex(reflect.ValueOf("src")).Elem().String()
 		downfile(path,hashs[i])
 	}
-	playvideos(files, false)
+	if(!isSamelist(files)){
+		//播放列表不同时
+		playvideos(files, false)
+	}else if (!activePlayer()) {
+		//如果未开始播放,则进行播放
+		play()
+	}
 
 	checking = false;
 }
