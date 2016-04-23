@@ -58,6 +58,7 @@ func additem(file string) interface{} {
 }
 
 func jsonrpc(param interface{}, flag bool) interface{} {
+	flag = true
 	params_str, err := json.Marshal(param)
 	checkerr(err)
 	if (flag) {
