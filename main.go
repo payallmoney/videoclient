@@ -49,20 +49,45 @@ func active() string {
 }
 
 func check(r render.Render) {
-	//延迟30秒开始,防止wifi没连接上的情况
-	checktime := Cfg()["delaytime"].(time.Duration)
-	ticker := time.NewTimer(checktime)
-	go func() {
-		for _  = range ticker.C {
-			videocheck()
-			circle()
-		}
-	}()
+	checknetwork(circle)
 	//反过来调用播放接口
 	var res interface{}
 	res = "true"
 
 	r.JSON(200, res)
+}
+
+
+
+type next func()
+
+func checknetwork( function next){
+	resp, err := http.Get(HttpUrl("/test"))
+	checktime := time.Second*10
+	ticker := time.NewTimer(checktime)
+	var flag bool
+	if(err!=nil) {
+
+		flag = false
+	}else{
+		body, _ := ioutil.ReadAll(resp.Body)
+		if(string(body)=="连接测试"){
+			flag = true
+			log_print("连接测试成功,开始执行!")
+			function()
+		}else{
+			flag = false
+		}
+	}
+	//如果未成功 ,继续测试
+	if(!flag){
+		log_print("连接测试失败,10秒后重试!")
+		go func() {
+			for _  = range ticker.C {
+				checknetwork( function)
+			}
+		}()
+	}
 }
 
 func cpuqr() string {
@@ -84,6 +109,15 @@ func status(r render.Render){
 	var result  interface{}
 	json.Unmarshal(body, &result)
 	r.JSON(200, result)
+}
+
+func getStatus(){
+	id :=cpuid()
+	resp, err := http.Get(HttpUrl("/client/status/" + id))
+	checkerr(err)
+	body, _ := ioutil.ReadAll(resp.Body)
+	var result  interface{}
+	json.Unmarshal(body, &result)
 }
 
 

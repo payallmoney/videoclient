@@ -10,6 +10,7 @@ import (
 )
 
 func circle() {
+	videocheck()
 	checktime := Cfg()["checktime"].(time.Duration)
 	ticker := time.NewTicker(checktime)
 	go func() {
