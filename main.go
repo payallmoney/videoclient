@@ -10,6 +10,7 @@ import (
 	"github.com/martini-contrib/render"
 	"github.com/skip2/go-qrcode"
 	"encoding/json"
+	"time"
 )
 
 var checking = false
@@ -48,8 +49,15 @@ func active() string {
 }
 
 func check(r render.Render) {
-	videocheck()
-	circle()
+	//延迟30秒开始,防止wifi没连接上的情况
+	checktime := Cfg()["delaytime"].(time.Duration)
+	ticker := time.NewTimer(checktime)
+	go func() {
+		for _  = range ticker.C {
+			videocheck()
+			circle()
+		}
+	}()
 	//反过来调用播放接口
 	var res interface{}
 	res = "true"

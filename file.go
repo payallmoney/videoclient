@@ -42,14 +42,14 @@ func downfile(path string,hash string) string {
 	checkerr(err)
 	defer out.Close()
 
-	transport := http.Transport{
-		Dial: dialTimeout,
-	}
-	client := http.Client{
-		Transport: &transport,
-	}
+	//transport := http.Transport{
+	//	Dial: dialTimeout,
+	//}
+	//client := http.Client{
+	//	Transport: &transport,
+	//}
 
-	resp, err := client.Get(downloadurl)
+	resp, err := http.Get(downloadurl)
 	checkerr(err)
 	defer resp.Body.Close()
 	io.Copy(out, resp.Body)
