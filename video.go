@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"os"
 	"log"
-	"github.com/djherbis/times"
 )
 
 func circle() {
@@ -112,7 +111,7 @@ func delOtherFile(newlist []string) {
 
 			if listfile == fileName {
 				flag = true
-				continue
+				break
 			}
 		}
 		if flag == false {
@@ -138,9 +137,9 @@ func delOldLogFile() {
 				fileName,err := filepath.Abs(ret +"/"+ file.Name())
 				checkerr(err)
 				//删除10天以上的日志文件
-				t, err := times.Stat(fileName)
+				t, err := os.Stat(fileName)
 				checkerr(err)
-				if t.BirthTime().Before(time.Now().Add(-time.Hour * 24 * 10)) {
+				if t.ModTime().Before(time.Now().Add(-time.Hour * 24 * 10)) {
 					err = os.Remove(fileName)
 					checkerr(err)
 				}
