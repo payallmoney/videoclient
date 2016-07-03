@@ -104,7 +104,8 @@ func delOtherFile(newlist []string) {
 	for _, file := range files {
 		log.Println(file.Name())
 		log.Println(ret + file.Name())
-		fileName,_ := filepath.Abs(ret +"/"+ file.Name())
+		fileName, err := filepath.Abs(ret +"/"+ file.Name())
+		checkerr(err)
 		flag := false
 		for _, listfile := range newlist {
 			log.Println(listfile)
@@ -134,7 +135,8 @@ func delOldLogFile() {
 			log.Println(file.Name()[0:6])
 			log.Println(file.Name()[len(file.Name()) - 4:])
 			if file.Name()[0:6] == "client" && file.Name()[len(file.Name()) - 4:] == ".log" {
-				fileName,_ := filepath.Abs(ret +"/"+ file.Name())
+				fileName,err := filepath.Abs(ret +"/"+ file.Name())
+				checkerr(err)
 				//删除10天以上的日志文件
 				t, err := times.Stat(fileName)
 				checkerr(err)
