@@ -113,7 +113,8 @@ func delOtherFile(newlist []string) {
 			}
 		}
 		if flag == false {
-			os.Remove(ret + file.Name())
+			err = os.Remove(ret + file.Name())
+			checkerr(err)
 		}
 	}
 }
@@ -136,7 +137,8 @@ func delOldLogFile() {
 				t, err := times.Stat(filename)
 				checkerr(err)
 				if t.BirthTime().Before(time.Now().Add(-time.Hour * 24 * 10)) {
-					os.Remove(filename)
+					err = os.Remove(filename)
+					checkerr(err)
 				}
 			}
 		}
