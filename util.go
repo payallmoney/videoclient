@@ -8,6 +8,7 @@ import (
 	"io"
 	"runtime/debug"
 	"reflect"
+"time"
 )
 
 func HttpUrl(url string) string {
@@ -22,6 +23,7 @@ func HttpUrl(url string) string {
 	}else {
 		ret = "http://" + server + "/" + url;
 	}
+	log.Println(ret)
 	return ret;
 }
 
@@ -40,10 +42,15 @@ func KodiUrl(url string) string {
 	return ret;
 }
 
-func checkerr(err error) {
+func logFileName() string{
+	t := time.Now()
 	var rootpath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+	return rootpath + "/client"+t.Format("2006-01-02")+".log"
+}
+
+func checkerr(err error) {
 	if err != nil {
-		var logfile, logfileerr = os.OpenFile(rootpath + "/client.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+		var logfile, logfileerr = os.OpenFile(logFileName(), os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 		if logfileerr != nil {
 			log.Fatalf("error opening file: %v", logfileerr)
 		}
@@ -59,7 +66,7 @@ func checkerr(err error) {
 
 
 func log_print(msg string) {
-	var logfile, logfileerr = os.OpenFile(rootpath + "/client.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	var logfile, logfileerr = os.OpenFile(logFileName(), os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 	if logfileerr != nil {
 		log.Fatalf("error opening file: %v", logfileerr)
 	}
@@ -71,7 +78,7 @@ func log_print(msg string) {
 }
 
 func log_printf(format string, msg string) {
-	var logfile, logfileerr = os.OpenFile(rootpath + "/client.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	var logfile, logfileerr = os.OpenFile(logFileName(), os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 	if logfileerr != nil {
 		log.Fatalf("error opening file: %v", logfileerr)
 	}

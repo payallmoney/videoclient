@@ -66,6 +66,7 @@ func jsonrpc(param interface{}, flag bool) interface{} {
 	}
 	resp, err := http.Post(KodiUrl("/jsonrpc"), "application/json", bytes.NewBuffer([]byte(params_str)))
 	checkerr(err)
+	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	if (flag) {
 		log_printf("=====ret====%s", string(body))

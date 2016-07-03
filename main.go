@@ -36,6 +36,7 @@ func reg() string {
 	id :=cpuid()
 	resp, err := http.Get(HttpUrl("/client/reg/" + id))
 	checkerr(err)
+	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	return string(body);
 }
@@ -44,6 +45,7 @@ func active() string {
 	id :=cpuid()
 	resp, err := http.Get(HttpUrl("/client/active/" + id))
 	checkerr(err)
+	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	return string(body);
 }
@@ -63,6 +65,7 @@ type next func()
 
 func checknetwork( function next){
 	resp, err := http.Get(HttpUrl("/test"))
+	defer resp.Body.Close()
 	checktime := time.Second*10
 	ticker := time.NewTimer(checktime)
 	var flag bool
@@ -105,6 +108,7 @@ func status(r render.Render){
 	id :=cpuid()
 	resp, err := http.Get(HttpUrl("/client/status/" + id))
 	checkerr(err)
+	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	var result  interface{}
 	json.Unmarshal(body, &result)
@@ -115,6 +119,7 @@ func getStatus(){
 	id :=cpuid()
 	resp, err := http.Get(HttpUrl("/client/status/" + id))
 	checkerr(err)
+	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	var result  interface{}
 	json.Unmarshal(body, &result)
