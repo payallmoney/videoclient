@@ -23,6 +23,26 @@ func circle() {
 	}()
 }
 
+func circleReport() {
+	//reportClientState()
+	checktime := Cfg()["reporttime"].(time.Duration)
+	ticker := time.NewTicker(checktime)
+	go func() {
+		for _ = range ticker.C {
+			reportClientState()
+		}
+	}()
+}
+
+func reportClientState(){
+	id := cpuid()
+	resp, err := http.Get(HttpUrl("/client/status/" + id))
+	checkerr(err)
+	_, err = ioutil.ReadAll(resp.Body)
+	checkerr(err)
+	resp.Body.Close()
+}
+
 func videocheck() {
 	log_print(" do .. videocheck...")
 	if checking {
