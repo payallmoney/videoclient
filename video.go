@@ -136,7 +136,7 @@ func delOldLogFile() {
 			if file.Name()[0:6] == "client" && file.Name()[len(file.Name()) - 4:] == ".log" {
 				fileName,_ := filepath.Abs(ret +"/"+ file.Name())
 				//删除10天以上的日志文件
-				t, err := times.Stat(filename)
+				t, err := times.Stat(fileName)
 				checkerr(err)
 				if t.BirthTime().Before(time.Now().Add(-time.Hour * 24 * 10)) {
 					err = os.Remove(fileName)
