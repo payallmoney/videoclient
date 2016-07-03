@@ -104,16 +104,18 @@ func delOtherFile(newlist []string) {
 	for _, file := range files {
 		log.Println(file.Name())
 		log.Println(ret + file.Name())
+		fileName,_ := filepath.Abs(ret +"/"+ file.Name())
 		flag := false
 		for _, listfile := range newlist {
 			log.Println(listfile)
-			if listfile == ret + file.Name() {
+
+			if listfile == fileName {
 				flag = true
 				continue
 			}
 		}
 		if flag == false {
-			err = os.Remove(ret + file.Name())
+			err = os.Remove(fileName)
 			checkerr(err)
 		}
 	}
@@ -132,12 +134,12 @@ func delOldLogFile() {
 			log.Println(file.Name()[0:6])
 			log.Println(file.Name()[len(file.Name()) - 4:])
 			if file.Name()[0:6] == "client" && file.Name()[len(file.Name()) - 4:] == ".log" {
-				filename := ret +"/"+ file.Name()
+				fileName,_ := filepath.Abs(ret +"/"+ file.Name())
 				//删除10天以上的日志文件
 				t, err := times.Stat(filename)
 				checkerr(err)
 				if t.BirthTime().Before(time.Now().Add(-time.Hour * 24 * 10)) {
-					err = os.Remove(filename)
+					err = os.Remove(fileName)
 					checkerr(err)
 				}
 			}
